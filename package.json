@@ -1,0 +1,11 @@
+{
+  "name": "auto-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "render": "node render.js"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2"
+  }
+}

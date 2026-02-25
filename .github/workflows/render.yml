@@ -1,0 +1,50 @@
+name: Render Reel
+
+on:
+  workflow_dispatch:
+    inputs:
+      u1:
+        description: "Update 1"
+        required: true
+      u2:
+        description: "Update 2"
+        required: true
+      u3:
+        description: "Update 3"
+        required: true
+      u4:
+        description: "Update 4"
+        required: true
+      u5:
+        description: "Update 5"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
+      - name: Render video
+        env:
+          U1: ${{ github.event.inputs.u1 }}
+          U2: ${{ github.event.inputs.u2 }}
+          U3: ${{ github.event.inputs.u3 }}
+          U4: ${{ github.event.inputs.u4 }}
+          U5: ${{ github.event.inputs.u5 }}
+        run: npm run render
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reel
+          path: output/reel.mp4
