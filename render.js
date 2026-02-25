@@ -46,7 +46,7 @@ fs.mkdirSync("output", { recursive: true });
   }
 
   // Make video (1 sec per slide)
-  const cmd = `ffmpeg -y -r 1 -i temp/slides/slide%d.png -i music/bg.mp3 -c:v libx264 -r 30 -pix_fmt yuv420p -shortest output/reel.mp4`;
+  const cmd = `ffmpeg -y -r 0.333 -i temp/slides/slide%d.png -i music/bg.mp3 -c:v libx264 -r 30 -pix_fmt yuv420p -pix_fmt yuv420p -shortest output/reel.mp4`;
   execSync(cmd, { stdio: "inherit" });
 
   console.log("Video generated: output/reel.mp4");
