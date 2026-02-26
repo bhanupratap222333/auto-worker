@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-// Use your Hindi font (make sure filename matches your repo)
+// Register Hindi font (use your actual filename)
 registerFont(path.join(__dirname, "fonts/NotoSansDevanagari-Regular.ttf"), {
   family: "NotoDeva"
 });
@@ -44,12 +44,13 @@ fs.mkdirSync("output", { recursive: true });
     const canvas = createCanvas(W, H);
     const ctx = canvas.getContext("2d");
 
-    // BG
+    // Background
     ctx.drawImage(bg, 0, 0, W, H);
 
-    // Draw pretty card
-    drawPrettySlide(ctx, updates[i], i + 1, updates.length);
+    // Draw clean card
+    drawCleanSlide(ctx, updates[i]);
 
+    // Save slide
     fs.writeFileSync(`temp/slides/slide${i + 1}.png`, canvas.toBuffer("image/png"));
   }
 
@@ -60,76 +61,50 @@ fs.mkdirSync("output", { recursive: true });
   console.log("Video generated: output/reel.mp4");
 })();
 
-// ---------------- UI Drawing ----------------
+// ---------------- Drawing ----------------
 
-function drawPrettySlide(ctx, data, index, total) {
+function drawCleanSlide(ctx, data) {
   const centerX = W / 2;
   const cardW = 820;
   const maxTextW = 760;
 
-  // First, measure content height (so we can center vertically)
+  // Build blocks
   const blocks = [];
-  blocks.push({ text: data.title, size: 60, lh: 76, color: "#0b2a5b", weight: "bold" });
+  blocks.push({ text: data.title, size: 60, lh: 78, color: "#0b2a5b", weight: "bold" });
   if (data.qual) blocks.push({ text: data.qual, size: 40, lh: 56, color: "#4b5563", weight: "bold" });
   if (data.dates && data.dates.length) {
     data.dates.forEach(d => blocks.push({ text: d, size: 42, lh: 58, color: "#0f766e", weight: "bold" }));
   }
 
-  // Measure height
+  // Measure content height
   ctx.textAlign = "center";
   let contentH = 0;
   for (const b of blocks) {
     ctx.font = `${b.weight} ${b.size}px NotoDeva`;
     contentH += measureWrappedHeight(ctx, b.text, maxTextW, b.lh) + 10;
   }
-  contentH += 40; // padding inside card
+  contentH += 40; // inner padding
 
-  // Card position (centered in safe area)
+  // Safe area (according to your BG)
   const safeTop = 520;
   const safeBottom = 1400;
   const safeH = safeBottom - safeTop;
-  const cardH = Math.min(Math.max(contentH, 360), 720); // clamp
+
+  const cardH = Math.min(Math.max(contentH, 360), 760);
   const cardX = (W - cardW) / 2;
   const cardY = safeTop + (safeH - cardH) / 2;
 
-  // Draw soft card (rounded)
+  // Draw soft glass card
   roundRect(ctx, cardX, cardY, cardW, cardH, 28, "rgba(255,255,255,0.14)");
 
-  // Accent top line
-  ctx.fillStyle = "rgba(13,148,136,0.9)";
-  ctx.fillRect(cardX + 24, cardY + 18, 120, 6);
-
-  // Small badge: "Update x/5"
-  drawBadge(ctx, cardX + cardW - 180, cardY + 14, `Update ${index}/${total}`);
-
-  // Draw text blocks centered inside card
+  // Draw text centered inside card
   let y = cardY + (cardH - contentH) / 2 + 30;
 
-  for (let i = 0; i < blocks.length; i++) {
-    const b = blocks[i];
+  for (const b of blocks) {
     ctx.fillStyle = b.color;
     ctx.font = `${b.weight} ${b.size}px NotoDeva`;
-    y = drawWrapped(ctx, b.text, centerX, y, maxTextW, b.lh) + 10;
-
-    // Divider after title
-    if (i === 0) {
-      ctx.fillStyle = "rgba(11,42,91,0.25)";
-      ctx.fillRect(centerX - 140, y + 6, 280, 2);
-      y += 22;
-    }
+    y = drawWrapped(ctx, b.text, centerX, y, maxTextW, b.lh) + 12;
   }
-}
-
-function drawBadge(ctx, x, y, text) {
-  ctx.font = "bold 28px NotoDeva";
-  const padX = 16, padY = 10;
-  const w = ctx.measureText(text).width + padX * 2;
-  const h = 28 + padY * 2;
-  roundRect(ctx, x, y, w, h, 16, "rgba(13,148,136,0.9)");
-  ctx.fillStyle = "#ffffff";
-  ctx.textAlign = "left";
-  ctx.fillText(text, x + padX, y + 28 + 2);
-  ctx.textAlign = "center";
 }
 
 function roundRect(ctx, x, y, w, h, r, fillStyle) {
