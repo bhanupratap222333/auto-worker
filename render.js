@@ -47,8 +47,8 @@ fs.mkdirSync("output", { recursive: true });
     // Background
     ctx.drawImage(bg, 0, 0, W, H);
 
-    // Draw clean card
-    drawCleanSlide(ctx, updates[i]);
+    // Draw text directly on BG box
+    drawTextBlock(ctx, updates[i]);
 
     // Save slide
     fs.writeFileSync(`temp/slides/slide${i + 1}.png`, canvas.toBuffer("image/png"));
@@ -63,64 +63,43 @@ fs.mkdirSync("output", { recursive: true });
 
 // ---------------- Drawing ----------------
 
-function drawCleanSlide(ctx, data) {
+function drawTextBlock(ctx, data) {
   const centerX = W / 2;
-  const cardW = 820;
-  const maxTextW = 760;
 
-  // Build blocks
+  // This width controls left-right padding.
+  // Assume your BG box is ~800px wide, keep 20px padding on both sides.
+  const boxInnerWidth = 760; // ~800 - 20 - 20
+
+  // Build blocks (bigger & bold title)
   const blocks = [];
-  blocks.push({ text: data.title, size: 60, lh: 78, color: "#0b2a5b", weight: "bold" });
-  if (data.qual) blocks.push({ text: data.qual, size: 40, lh: 56, color: "#4b5563", weight: "bold" });
+  blocks.push({ text: data.title, size: 66, lh: 84, color: "#000000", weight: "900" }); // Title bigger & bolder
+  if (data.qual) blocks.push({ text: data.qual, size: 42, lh: 60, color: "#4b5563", weight: "700" });
   if (data.dates && data.dates.length) {
-    data.dates.forEach(d => blocks.push({ text: d, size: 42, lh: 58, color: "#0f766e", weight: "bold" }));
+    data.dates.forEach(d => blocks.push({ text: d, size: 46, lh: 64, color: "#155836", weight: "700" }));
   }
 
-  // Measure content height
+  // Measure total content height to center vertically in box
   ctx.textAlign = "center";
   let contentH = 0;
   for (const b of blocks) {
     ctx.font = `${b.weight} ${b.size}px NotoDeva`;
-    contentH += measureWrappedHeight(ctx, b.text, maxTextW, b.lh) + 10;
+    contentH += measureWrappedHeight(ctx, b.text, boxInnerWidth, b.lh) + 16; // gap between blocks
   }
-  contentH += 40; // inner padding
 
-  // Safe area (according to your BG)
+  // Your BG box vertical safe area (adjust if needed)
   const safeTop = 520;
   const safeBottom = 1400;
   const safeH = safeBottom - safeTop;
 
-  const cardH = Math.min(Math.max(contentH, 360), 760);
-  const cardX = (W - cardW) / 2;
-  const cardY = safeTop + (safeH - cardH) / 2;
+  // Start Y so that block is centered vertically in the box
+  let y = safeTop + (safeH - contentH) / 2;
 
-  // Draw soft glass card
-  roundRect(ctx, cardX, cardY, cardW, cardH, 28, "rgba(255,255,255,0.14)");
-
-  // Draw text centered inside card
-  let y = cardY + (cardH - contentH) / 2 + 30;
-
+  // Draw blocks
   for (const b of blocks) {
     ctx.fillStyle = b.color;
     ctx.font = `${b.weight} ${b.size}px NotoDeva`;
-    y = drawWrapped(ctx, b.text, centerX, y, maxTextW, b.lh) + 12;
+    y = drawWrapped(ctx, b.text, centerX, y, boxInnerWidth, b.lh) + 18; // vertical gap between sections
   }
-}
-
-function roundRect(ctx, x, y, w, h, r, fillStyle) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-  ctx.fillStyle = fillStyle;
-  ctx.fill();
 }
 
 function drawWrapped(ctx, text, x, startY, maxWidth, lineHeight) {
