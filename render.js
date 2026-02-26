@@ -4,7 +4,7 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 // Use your Hindi font (make sure filename matches your repo)
-registerFont(path.join(__dirname, "fonts/NotoSansDevanagari-VariableFont_wdth,wght.ttf"), {
+registerFont(path.join(__dirname, "fonts/NotoSansDevanagari-Regular.ttf"), {
   family: "NotoDeva"
 });
 
